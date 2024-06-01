@@ -5,3 +5,7 @@ edition = "2021"
 
 [dependencies]
 rocket = "0.5.1"
+hex = "0.4.3"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
+rand = "0.8.5"
+keyring = "2"
