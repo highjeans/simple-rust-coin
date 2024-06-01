@@ -40,3 +40,11 @@ fn get_keys() -> KeyPair {
 struct Wallet {
     key_pair: KeyPair
 }
+
+impl Wallet {
+    pub fn new() -> Wallet {
+        Wallet {
+            key_pair: get_keys()
+        }
+    }
+}
