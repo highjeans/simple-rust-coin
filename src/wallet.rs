@@ -47,4 +47,8 @@ impl Wallet {
             key_pair: get_keys()
         }
     }
+
+    pub fn shutdown(&self) {
+        Entry::new("simple-rust-coin", "private_key").unwrap().set_password(&hex::encode(self.key_pair.private_key.as_bytes())).unwrap();
+    }
 }
