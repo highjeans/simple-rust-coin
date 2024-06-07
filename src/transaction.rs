@@ -1,5 +1,6 @@
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 
+#[derive(Clone)]
 struct UTXO {
     amount: f64,
     owner: String
@@ -30,7 +31,7 @@ impl Transaction {
             }
         );
 
-        let signature = hex::encode(private_key.sign((sender + &*receiver + &*String::from(amount)).as_ref()).to_bytes());
+        let signature = hex::encode(private_key.sign((sender + &receiver + &amount.to_string()).as_ref()).to_bytes());
 
         Transaction {
             input_utxos,
@@ -46,13 +47,13 @@ impl Transaction {
 
         let sender_bytes: &[u8] = &hex::decode(sender.clone())?;
 
-        let sender_arr: [u8; 32] = [0; 32];
+        let mut sender_arr: [u8; 32] = [0; 32];
         sender_arr.copy_from_slice(sender_bytes);
 
         let signature_bytes: &[u8] = &hex::decode(self.signature.clone())?;
-        let signature_arr: [u8; 64] = [0; 64];
+        let mut signature_arr: [u8; 64] = [0; 64];
         signature_arr.copy_from_slice(signature_bytes);
 
-        Ok(VerifyingKey::from_bytes(&sender_arr)?.verify((sender + &*receiver + &*String::from(amount)).as_ref(), &Signature::from_bytes(&signature_arr))?)
+        Ok(VerifyingKey::from_bytes(&sender_arr)?.verify((sender + &receiver + &amount.to_string()).as_ref(), &Signature::from_bytes(&signature_arr))?)
     }
 }
