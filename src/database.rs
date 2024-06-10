@@ -7,6 +7,12 @@ fn connection() -> sqlite::Connection {
     sqlite::Connection::open("simple-rust-coin.sqlite").unwrap()
 }
 
+pub fn initialize_database() {
+    let connection = connection();
+    connection.execute("CREATE TABLE IF NOT EXISTS utxos (id integer PRIMARY KEY NOT NULL, amount real NOT NULL CHECK ( typeof(amount) = 'real' ), owner VARCHAR NOT NULL CHECK ( typeof(owner) = 'text' AND length(owner) = 64), used INTEGER NOT NULL DEFAULT FALSE);").unwrap();
+    connection.execute("CREATE TABLE IF NOT EXISTS blocks (number integer NOT NULL CHECK ( typeof(number) = 'integer' AND number >= 0 ), hash VARCHAR PRIMARY KEY NOT NULL CHECK ( typeof(hash) = 'text' AND length(hash) = 128), prev_hash VARCHAR NOT NULL CHECK ( typeof(prev_hash) = 'text' AND length(prev_hash) = 128), transactions VARCHAR NOT NULL CHECK ( typeof(transactions) = 'text' ), nonce integer NOT NULL CHECK ( typeof(nonce) = 'integer' ), timestamp text NOT NULL CHECK ( timestamp IS date(timestamp, 'subsec')), miner text NOT NULL CHECK ( typeof(miner) = 'text' AND length(miner) = 64 ));").unwrap();
+}
+
 pub fn get_frontier_block() -> Result<Block, ()> {
     let connection = connection();
     let statement = connection.prepare("SELECT * FROM blocks ORDER BY number DESC, timestamp ASC").unwrap();
