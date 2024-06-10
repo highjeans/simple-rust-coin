@@ -1,4 +1,8 @@
 mod wallet;
+mod transaction;
+mod database;
+mod block;
+
 
 #[macro_use] extern crate rocket;
 
