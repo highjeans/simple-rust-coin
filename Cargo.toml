@@ -10,3 +10,6 @@ ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 rand = "0.8.5"
 keyring = "2"
 sqlite = "0.36.0"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
+sha2 = "0.10.8"

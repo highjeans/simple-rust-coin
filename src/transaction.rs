@@ -1,15 +1,17 @@
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
-struct UTXO {
-    amount: f64,
-    owner: String
+#[derive(Serialize, Deserialize, Clone)]
+pub struct UTXO {
+    pub amount: f64,
+    pub owner: String
 }
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Transaction {
-    input_utxos: Vec<UTXO>,
-    output_utxos: (UTXO, UTXO), // index 0: the UTXO gone to receiver, index 1: change
-    signature: String
+    pub input_utxos: Vec<UTXO>,
+    pub output_utxos: (UTXO, UTXO), // index 0: the UTXO gone to receiver, index 1: change
+    pub signature: String
 }
 
 impl Transaction {
