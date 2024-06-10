@@ -71,3 +71,58 @@ fn return_block_from_statement(mut statement: Statement) -> Result<Block, ()> {
     }
 }
 
+pub fn get_valid_owner_utxos(owner: String) -> Vec<UTXO> {
+    let connection = connection();
+    let mut statement = connection.prepare("SELECT amount, owner FROM utxos WHERE owner = ? AND used = FALSE;").unwrap();
+    statement.bind((1, owner.clone().as_str())).unwrap();
+    let mut utxos = Vec::<UTXO>::new();
+    while let Ok(_) = statement.next() {
+        utxos.push(UTXO {
+            amount: statement.read::<f64, _>("amount").unwrap(),
+            owner: statement.read::<String, _>("owner").unwrap()
+        })
+    }
+    utxos
+}
+
+pub fn insert_block(block: Block) -> sqlite::Result<()> {
+    let connection = connection();
+    let transactions_str = serde_json::to_string(&block.transactions).unwrap();
+    let query = format!("INSERT INTO blocks (number, hash, prev_hash, transactions, nonce, timestamp, miner) VALUES ({}, '{}', '{}', {}, {}, {}, '{}'", block.number, block.hash.clone(), block.prev_hash.clone(), transactions_str, block.nonce, block.timestamp, block.miner.clone());
+    connection.execute(query)?;
+
+    // Add all new UTXOs generated from the transactions and mark input UTXOs as used
+    for transaction in block.transactions {
+        for utxo in transaction.input_utxos {
+            let mut statement = connection.prepare("UPDATE utxos SET used = TRUE WHERE id = (SELECT min(id) FROM utxos WHERE amount = ? AND owner = ? AND used = FALSE);")?;
+            statement.bind::<&[(i32, sqlite::Value)]>(&[
+                (1, utxo.amount.try_into().unwrap()),
+                (2, utxo.owner.clone().try_into().unwrap())
+            ])?;
+            statement.next()?;
+        }
+
+        for utxo in [transaction.output_utxos.0, transaction.output_utxos.1] {
+            let mut statement = connection.prepare("INSERT INTO utxos (amount, owner) VALUES (?, ?)")?;
+            statement.bind::<&[(i32, sqlite::Value)]>(&[
+                (1, utxo.amount.try_into().unwrap()),
+                (2, utxo.owner.clone().try_into().unwrap())
+            ])?;
+            statement.next()?;
+        }
+    }
+    Ok(())
+}
+
+pub fn get_all_utxos() -> Vec<UTXO> {
+    let connection = connection();
+    let mut statement = connection.prepare("SELECT amount, owner FROM utxos WHERE used = FALSE;").unwrap();
+    let mut utxos = Vec::<UTXO>::new();
+    while let Ok(_) = statement.next() {
+        utxos.push(UTXO {
+            amount: statement.read::<f64, _>("amount").unwrap(),
+            owner: statement.read::<String, _>("owner").unwrap()
+        })
+    }
+    utxos
+}
